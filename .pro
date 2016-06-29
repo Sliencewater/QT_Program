@@ -13,12 +13,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    window.cpp \
-    menber_level.cpp
+    window.cpp
 
 HEADERS  += \
-    window.h \
-    window_messagetool.h
+    windows.h
 
 FORMS    += mainwindow.ui
 

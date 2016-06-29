@@ -1,20 +1,208 @@
 #include "ui_mainwindow.h"
-#include "window.h"
-#include "window_messagetool.h"
+#include "windows.h"
 QList<AddressBook> addressbook;
 QList<LevelMember> levelmember;
 Comunity comunity;
 QList<Organization> organization;
 QList<Support_Sponsor> support;
 QList<Evaluate> evaluate;
+#define MAX_V 20;
+#define INFINITY 32767
+
+
+typedef struct
+{
+    char *vexs[20] = {
+        "南大门","英庐","群庐","运动场","和庐","祥庐","北门","静庐","一食堂","宁庐","翠庐"
+        ,"荟庐","一教","至善广场","二教","体育馆","图文信息楼","大学生活动中心","商业街","二食堂"};
+
+    int arcs[20][20];
+    int vexnum,arcnum;
+}MGraph;
+
+
+void create(MGraph &G)
+{
+    int i = 0, j = 0;
+    G.vexnum = 20; G.arcnum = 32;
+
+
+    G.arcs[0][1] = 100;G.arcs[1][0] = 100;
+    G.arcs[0][11] = 20;G.arcs[11][0] = 20;
+    G.arcs[0][13] = 50;G.arcs[13][0] = 50;
+    G.arcs[1][14] = 40;G.arcs[14][1] = 40;
+    G.arcs[1][2] = 10;G.arcs[2][1] = 10;
+    G.arcs[2][14] = 40;G.arcs[14][2] = 40;
+    G.arcs[2][3] = 40;G.arcs[3][2] = 40;
+    G.arcs[3][16] = 80;G.arcs[16][3] = 80;
+    G.arcs[3][4] = 50;G.arcs[4][3] = 50;
+    G.arcs[4][19] = 30;G.arcs[19][4] = 30;
+    G.arcs[4][5] = 50;G.arcs[5][4] = 50;
+    G.arcs[5][6] = 20;G.arcs[6][5] = 20;
+    G.arcs[6][18] = 50;G.arcs[18][6] = 50;
+    G.arcs[6][7] = 20;G.arcs[7][6] = 20;
+    G.arcs[7][8] = 10;G.arcs[8][7] = 10;
+    G.arcs[8][18] = 10;G.arcs[18][8] = 10;
+    G.arcs[8][9] = 10; G.arcs[9][8] = 10;
+    G.arcs[9][10] = 100;G.arcs[10][9] = 100;
+    G.arcs[9][17] = 70;G.arcs[17][9] = 70;
+    G.arcs[10][12] = 40;G.arcs[12][10] = 40;
+    G.arcs[10][11] = 10;G.arcs[11][10] = 10;
+    G.arcs[11][12] = 40;G.arcs[12][11] = 40;
+    G.arcs[12][13] = 20;G.arcs[13][12] = 20;
+    G.arcs[13][14] = 20;G.arcs[14][13] = 20;
+    G.arcs[13][15] = 40;G.arcs[15][13] = 40;
+    G.arcs[13][16] = 100;G.arcs[16][13] = 100;
+    G.arcs[13][17] = 30;G.arcs[17][13] = 30;
+    G.arcs[14][15] = 30;G.arcs[15][14] = 30;
+    G.arcs[15][16] = 30;G.arcs[16][15] = 30;
+    G.arcs[16][18] = 30;G.arcs[18][16] = 30;
+    G.arcs[16][17] = 30;G.arcs[17][16] = 30;
+    G.arcs[18][19] = 10;G.arcs[19][18] = 10;
+
+
+    for(i = 0; i < G.vexnum ; i++ )
+        for(j = 0 ; j < G.vexnum ; j++)
+        {
+            if(i == j)
+                G.arcs[i][j] = 0;
+            else
+                G.arcs[i][j] = INFINITY;
+        }
+
+}
+int have[20];//保存的最短路径下标
+void ShortPath(MGraph &G,int v0,int p[20][20],int d[])
+{
+    int v,w,i,j,min;
+    int final[20];
+    int k = 1;
+    for(v = 0 ; v < G.vexnum ; ++v)
+    {
+        final[v] = 0;
+        d[v] = G.arcs[v0-1][v];
+        for(w = 0; w < G.vexnum ; ++w)
+            p[v][w] = 0;
+        if(d[v] < INFINITY)
+        {
+            p[v][v0-1] = 1 ;
+            p[v][v] = 1;
+        }
+    }
+    d[v0-1] = 0 ;
+    final[v0-1] = 1;
+    have[0] = v0-1;
+    for(i = 1 ; i < G.vexnum ; ++i)
+    {
+        min = INFINITY;
+        for(w = 0 ; w < G.vexnum ; ++w)
+            if(!final[w])
+                if(d[w] < min)
+                {
+                    v = w;
+                    min = d[w];
+                }
+        final[v] = 1;
+        have[k] = v;
+        k++;
+
+        for(w = 0 ; w < G.vexnum ; ++w)
+            if(!final[w]&&(min + G.arcs[v][w] < d[w]))
+            {
+                d[w] = min + G.arcs[v][w];
+                for(j = 0 ; j < G.vexnum ; j++)
+                    p[w][j] = p[v][j];
+                p[w][w] = 1;
+            }
+    }
+}
+
+
+class Messagetool:public QDialog
+{
+public:
+    Messagetool(QDialog *parent = 0);
+
+    QTextEdit *readline;
+    QPushButton *bttn;
+    QString str;
+protected:
+   // void mouseMoveEvent(QMouseEvent *event);
+};
+
+
+
+
+
+//关键路径
+
+
+typedef char VerTexType2;
+
+typedef struct ArcNode
+{                		//边结点
+    int adjvex;                          	//该边所指向的顶点的位置
+    int weight;								//权值
+    struct ArcNode *nextarc;          		//指向下一条边的指针
+}ArcNode;
+
+typedef struct VNode
+{
+    VerTexType2 data;                    	//顶点信息
+    ArcNode *firstarc;                		//指向第一条依附该顶点的边的指针
+}VNode, AdjList;               		//AdjList表示邻接表类型
+
+typedef struct
+{
+    AdjList vertices[100];                 		//邻接表
+    AdjList converse_vertices[100];				//逆邻接表
+    int vexnum, arcnum;              		//图的当前顶点数和边数
+}ALGraph;
+
+typedef struct//- - - - -顺序栈的定义
+{
+    int *base;
+    int *top;
+    int stacksize;
+}spStack;
+
+int indegree[100];						//数组indegree存放个顶点的入度
+int ve[9900];								//事件vi的最早发生时间
+int vl[9900];								//事件vi的最迟发生时间
+int topo[100];							//记录拓扑序列的顶点序号
+spStack S;
+
+
+typedef struct//------------图的邻接矩阵
+{
+    VerTexType2 vexs[100];            		//顶点表
+    int  arcs[100][100];      		//邻接矩阵
+    int vexnum,arcnum;                		//图的当前点数和边数
+}AMGraph;
+
+
+
+
+//
+
+Messagetool::Messagetool(QDialog *parent)
+    :QDialog(parent)
+{
+    readline = new QTextEdit;
+    bttn = new QPushButton;
+}
 //交互界面+第一部分
 void windows::open1()
 {
     QWidget *windows1 = new QWidget;
     windows1->resize( QSize( 300, 300 ));
     windows1->setWindowTitle(tr("Member message manage"));
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
 
+    windows1->setPalette(palette);
     QPushButton *bttn1 = new QPushButton(tr("Address Book Manage"));
+
     QPushButton *bttn2 = new QPushButton("Member Level Manage");
 
     connect(bttn1,&QPushButton::clicked,this,&windows::Show_Menu_Address);
@@ -34,6 +222,11 @@ void windows::open2()
     QWidget *windows2 = new QWidget;
     windows2->resize( QSize( 300, 300 ));
     windows2->setWindowTitle(tr("club helper"));
+
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    windows2->setPalette(palette);
     QPushButton *bttn1 = new QPushButton(tr("Club Basic information management"));
     QPushButton *bttn2 = new QPushButton("Organization Management Agency");
     QPushButton *bttn3 = new QPushButton("Sponsorship supplier management");
@@ -55,13 +248,17 @@ void windows::open3()
     QWidget *windows3 = new QWidget;
     windows3->resize( QSize( 300, 300 ));
     windows3->setWindowTitle(tr("club activity manage"));
+    //windows3->setStyleSheet("background-color: gray");
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
 
+    windows3->setPalette(palette);
     QPushButton *bttn1 = new QPushButton(tr("Activities Management Plan"));
     QPushButton *bttn2 = new QPushButton("Preparatory activities management");
     QPushButton *bttn3 = new QPushButton("Evaluation of management activities");
 
-    //connect(bttn1,&QPushButton::clicked,this,&windows::open1);
-    //connect(bttn2,&QPushButton::clicked,this,&windows::open2);
+    connect(bttn1,&QPushButton::clicked,this,&windows::windows_plan);
+    connect(bttn2,&QPushButton::clicked,this,&windows::guide_school);
     connect(bttn3,&QPushButton::clicked,this,&windows::Windwos_Evalute);
 
     QVBoxLayout *vbox = new QVBoxLayout;
@@ -71,21 +268,46 @@ void windows::open3()
     windows3->setLayout(vbox);
     windows3->show();
    //QMessageBox::information(this,"Error","nobody");
+
 }
 
 windows::windows(QWidget *parent):QWidget(parent)
 {
+
+    //3.1
+    R.elem = new Acti_Plan[INIT_LEN_ARRAY];
+    R.lefght = 0;
+    T.thing = new Things[INIT_LEN_ARRAY];
+    T.actity = new Actity[INIT_LEN_ARRAY];
+
+    this->setAutoFillBackground(true);
+
     setWindowTitle("高校社团助手");
     resize( QSize( 300, 300 ));
 
     QLabel *info = new QLabel(this);
-    info->setText("  Welcome to school club helper");
+    //info->setText("    Welcome To School Club Helper");
     info->setGeometry(QRect(20, 20, 260, 20));
-    info->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+
+    //info->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    this->setPalette(palette);
 
     bttn1 = new QPushButton(tr("Member message manage"));
+    bttn1->setFixedSize(280,60);
+    bttn1->setStyleSheet("background-color:rgb(213,176,195)");
+    bttn1->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     bttn2 = new QPushButton("club helper");
+    bttn2->setFixedSize(280,60);
+    bttn2->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
     bttn3 = new QPushButton("club activity manage");
+    bttn3->setFixedSize(280,60);
+    bttn3->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+
     connect(bttn1,&QPushButton::clicked,this,&windows::open1);
     connect(bttn2,&QPushButton::clicked,this,&windows::open2);
     connect(bttn3,&QPushButton::clicked,this,&windows::open3);
@@ -95,6 +317,10 @@ windows::windows(QWidget *parent):QWidget(parent)
     vbox->addWidget(bttn2);
     vbox->addWidget(bttn3);
     setLayout(vbox);
+
+    //text
+
+
 }
 
 void windows::Show_Menu_Address()
@@ -102,13 +328,27 @@ void windows::Show_Menu_Address()
     QWidget *windows = new QWidget();
     windows->resize( QSize( 400, 400 ));
     windows->setWindowTitle(tr("Address Book Manage"));
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
 
+    windows->setPalette(palette);
     QPushButton *bttn1 = new QPushButton(tr("Contacts initialization and saved to a file"));
+    bttn1->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn2 = new QPushButton("Delete contacts members");
+    bttn2->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn3 = new QPushButton("Contacts Lookup member");
+    bttn3->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn4 = new QPushButton("Contacts modify records");
+    bttn4->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn5 = new QPushButton("Insert address book record");
+    bttn5->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn6 = new QPushButton("Contacts show all records");
+    bttn6->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
     connect(bttn1,&QPushButton::clicked,this,&windows::Save_Address);
     connect(bttn2,&QPushButton::clicked,this,&windows::Delete_Address);
@@ -163,9 +403,15 @@ void windows::Save_Address()
 void windows::Delete_Address()
 {
 
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Delete_Address"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
 
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input delete name:");
@@ -203,10 +449,15 @@ void windows::Delete_Address()
 
 void windows::Search_Address()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Search_Address"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input search name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -247,10 +498,15 @@ void windows::Search_Address()
 
 void windows::Modify_Address()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Modify_Address"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input modify name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -274,13 +530,13 @@ void windows::Modify_Address()
                 QMessageBox::information(this,"SUCCESS","SUCCESS");
                 QDialog *wins = new QDialog;
                 wins->setWindowTitle("show");
-                QLineEdit *read1 = new QLineEdit;
-                QLineEdit *read2 = new QLineEdit;
-                QLineEdit *read3 = new QLineEdit;
-                QLineEdit *read4 = new QLineEdit;
-                QLineEdit *read5 = new QLineEdit;
-                QLineEdit *read6 = new QLineEdit;
-                QLineEdit *read7 = new QLineEdit;
+                QLineEdit *read1 = new QLineEdit("Name");
+                QLineEdit *read2 = new QLineEdit("Num");
+                QLineEdit *read3 = new QLineEdit("Sex");
+                QLineEdit *read4 = new QLineEdit("Class");
+                QLineEdit *read5 = new QLineEdit("Comunity");
+                QLineEdit *read6 = new QLineEdit("Phone");
+                QLineEdit *read7 = new QLineEdit("Address");
                 QPushButton *bttn = new QPushButton();
                 bttn->setText("send");
                 QVBoxLayout *layout = new QVBoxLayout;
@@ -324,17 +580,28 @@ void windows::Traversal_Book()
     QString temp = " ";
     QVBoxLayout *layout = new QVBoxLayout;
     QWidget *win = new QWidget();
+    QString aa = "  Name   |   Num   |  Sex  |  Class  |  Comunity  |  Phone  |  Address";
+    QLineEdit *info = new QLineEdit(aa);
+
+    info->setReadOnly(true);
+    layout->addWidget(info);
+
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     win->resize(600,200);
     win->setWindowTitle(tr("show_all"));
     int i;
     for(i = 0;i < addressbook.length();++i)
     {
         QString str = addressbook[i].stud_Name + temp + addressbook[i].stud_Num
-                +addressbook[i] . stud_Sex + temp+addressbook[i].stud_Class+temp+
+                + temp +addressbook[i] . stud_Sex + temp+addressbook[i].stud_Class+temp+
                 addressbook[i].comunity_Time+ temp + addressbook[i].phone_Num + temp
                 + addressbook[i].Address;
         QLineEdit *text = new QLineEdit(str);
-        layout->addWidget(text);
+        text->setReadOnly(true);
+        layout->addWidget(text,30);
     }
     win->setLayout(layout);
     win->show();
@@ -344,12 +611,25 @@ void windows::MemberLevelManage()
     QWidget *windows = new QWidget();
     windows->resize( QSize( 400, 400 ));
     windows->setWindowTitle(tr("Member Level Manage"));
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
 
+    windows->setPalette(palette);
     QPushButton *bttn1 = new QPushButton(tr("Initialization information"));
+    bttn1->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn2 = new QPushButton("Increase score");
+    bttn2->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn3 = new QPushButton("decrease score");
+    bttn3->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn4 = new QPushButton("Search_member");
+    bttn4->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn5 = new QPushButton("Show all Menber and Average");
+    bttn5->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     //QPushButton *bttn6 = new QPushButton("sort by score");
 
     connect(bttn1,&QPushButton::clicked,this,&windows::Save_file_member);
@@ -401,10 +681,15 @@ void windows::Save_file_member()
 }
 void windows::Getscore()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Getscore"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input getscore name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -445,10 +730,15 @@ void windows::Getscore()
 }
 void windows::Deductscore()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Getscore"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input Deduct name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -494,10 +784,15 @@ void windows::Deductscore()
 }
 void windows::Search_member()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Search_Menber_score"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input search name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -543,6 +838,10 @@ void windows::Show_Menber_Average()
     QString temp2 = " score is ";
     QVBoxLayout *layout = new QVBoxLayout;
     QWidget *win = new QWidget();
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     win->resize(600,200);
     win->setWindowTitle("show_all_average");
     int i,sum = 0;
@@ -554,11 +853,13 @@ void windows::Show_Menber_Average()
         QString str = levelmember[i].stud_Name + temp+ temp1 + str1 +
                 temp + temp2 +str2;
         QLineEdit *text = new QLineEdit(str);
+        text->setReadOnly(true);
         layout->addWidget(text);
     }
     QString info = "average is ";
     QString info_ave = QString::number(sum/levelmember.length(),10);
     QLineEdit *info_text = new QLineEdit(info+info_ave);
+    info_text->setReadOnly(true);
     layout->addWidget(info_text);
     win->setLayout(layout);
     win->show();
@@ -571,16 +872,35 @@ void windows::windwos_for_Club_Basic_information()
     QWidget *windows2 = new QWidget;
     windows2->resize( QSize( 300, 300 ));
     windows2->setWindowTitle(tr("club helper"));
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
 
+    windows2->setPalette(palette);
 
     QPushButton *bttn1 = new QPushButton(tr("Initial_comunity"));
+    bttn1->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn2 = new QPushButton("Rivise_name");
+    bttn2->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn3 = new QPushButton("Rivise_sponsor");
+    bttn3->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn4 = new QPushButton(tr("Rivise_property"));
+    bttn4->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn5 = new QPushButton("Rivise_slogan");
+    bttn5->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn6 = new QPushButton("Rivise_purpose");
+    bttn6->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn7 = new QPushButton("Rivise_regulation");
+    bttn7->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn8 = new QPushButton("Traversal_comunity");
+    bttn8->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
 
 
     connect(bttn1,&QPushButton::clicked,this,&windows::Read_file_comunity);
@@ -640,10 +960,15 @@ void windows::Read_file_comunity()
 
 void windows::Rivise_name()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Rivise_name"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -667,10 +992,15 @@ void windows::Rivise_name()
 
 void windows::Rivise_sponsor()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Rivise_sponsor"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input sponsor:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -691,10 +1021,15 @@ void windows::Rivise_sponsor()
 
 void windows::Rivise_property()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Rivise_property"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input property:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -715,10 +1050,15 @@ void windows::Rivise_property()
 
 void windows::Rivise_slogan()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Rivise_slogan"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input slogan:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -739,10 +1079,15 @@ void windows::Rivise_slogan()
 
 void windows::Rivise_purpose()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Rivise_purpose"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input purpose:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -763,10 +1108,15 @@ void windows::Rivise_purpose()
 
 void windows::Rivise_regulation()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Rivise_regulation"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input regulation:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -792,8 +1142,10 @@ void windows::Traversal_comunity()
     QWidget *win = new QWidget();
     win->resize(600,200);
     win->setWindowTitle(tr("show_all"));
-    int i;
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
 
+    win->setPalette(palette);
     QString str = comunity.name + temp + comunity.sponsor + comunity.property + temp
             + comunity.slogan + temp + comunity.purpose + temp + comunity.regulation;
 
@@ -810,13 +1162,26 @@ void windows::Windows_For_Organization_Management_Agency()
     QWidget *windows2 = new QWidget;
     windows2->resize( QSize( 300, 300 ));
     windows2->setWindowTitle(tr("club helper"));
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
 
+    windows2->setPalette(palette);
 
     QPushButton *bttn1 = new QPushButton(tr("Initial_organization"));
+    bttn1->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn2 = new QPushButton("Traversal_organization");
+    bttn2->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn3 = new QPushButton("Update_organization");
+    bttn2->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn4 = new QPushButton(tr("Del_organization"));
+    bttn4->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn5 = new QPushButton("Search_organization");
+    bttn5->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
 
 
 
@@ -876,6 +1241,10 @@ void windows::Traversal_organization()
     QVBoxLayout *layout = new QVBoxLayout;
     QWidget *win = new QWidget();
     win->resize(600,200);
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     win->setWindowTitle(tr("show_all"));
     int i;
     for(i = 0 ; i <organization.length() ; i++)
@@ -896,10 +1265,15 @@ void windows::Traversal_organization()
 
 void windows::Update_organization()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Update_organization"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input modify organization name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -962,10 +1336,15 @@ void windows::Update_organization()
 
 void windows::Del_organization()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Del_organization"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input delete name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -1000,10 +1379,15 @@ void windows::Del_organization()
 
 void windows::Search_organization()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Search_organization"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input search name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -1049,14 +1433,29 @@ void windows::Windows_For_Support()
     QWidget *windows2 = new QWidget;
     windows2->resize( QSize( 300, 300 ));
     windows2->setWindowTitle(tr("club helper"));
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
 
+    windows2->setPalette(palette);
 
     QPushButton *bttn1 = new QPushButton(tr("Save_File_Support"));
+    bttn1->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn2 = new QPushButton("Insert_Support");
+    bttn2->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn3 = new QPushButton("Modify_Support");
+    bttn3->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn4 = new QPushButton(tr("Delete_Support"));
+    bttn4->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn5 = new QPushButton("Traversal_Support");
+    bttn5->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn6 = new QPushButton("Search_Support");
+    bttn6->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
 
 
     connect(bttn1,&QPushButton::clicked,this,&windows::Save_File_Support);
@@ -1116,10 +1515,15 @@ void windows::Save_File_Support()
 
 void windows::Insert_Support()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Insert_Support"));
     win->bttn->setText(tr("send"));
+   win-> bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input space you want to insert:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -1182,10 +1586,15 @@ void windows::Insert_Support()
 
 void windows::Modify_Support()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Modify_Support"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input modify name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -1260,10 +1669,15 @@ void windows::Modify_Support()
 
 void windows::Delete_Support()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Delete_Support"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input delete name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -1314,6 +1728,7 @@ void windows::Traversal_Support()
                 + support[i].Support3 + temp + support[i].Support4 + temp
                 + support[i].Support5;
         QLineEdit *text = new QLineEdit(str);
+        text->setReadOnly(true);
         layout->addWidget(text);
     }
     win->setLayout(layout);
@@ -1322,10 +1737,15 @@ void windows::Traversal_Support()
 
 void windows::Search_Support()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Search_Support"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input search name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -1376,13 +1796,26 @@ void windows::Windwos_Evalute()
     QWidget *windows2 = new QWidget;
     windows2->resize( QSize( 300, 300 ));
     windows2->setWindowTitle(tr("Windwos_Evalute"));
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
 
+    windows2->setPalette(palette);
 
     QPushButton *bttn1 = new QPushButton(tr("Initial_Evaluate"));
+    bttn1->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn2 = new QPushButton("Insert_Evaluate");
+    bttn2->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn3 = new QPushButton("Delete_Evaluate");
+    bttn3->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn4 = new QPushButton(tr("Traversal_Evaluate"));
+    bttn4->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
     QPushButton *bttn5 = new QPushButton("Search_Evaluate");
+    bttn5->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
 
 
     connect(bttn1,&QPushButton::clicked,this,&windows::Initial_Evaluate);
@@ -1439,10 +1872,15 @@ void windows::Initial_Evaluate()
 
 void windows::Insert_Evaluate()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Insert_Evaluate"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input space you want to insert:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -1502,10 +1940,15 @@ void windows::Insert_Evaluate()
 
 void windows::Delete_Evaluate()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Delete_Evaluate"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input delete act_name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -1544,6 +1987,10 @@ void windows::Traversal_Evaluate()
     QString temp = " | ";
     QVBoxLayout *layout = new QVBoxLayout;
     QWidget *win = new QWidget();
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     win->resize(600,200);
     win->setWindowTitle(tr("show_all"));
     int i;
@@ -1554,6 +2001,7 @@ void windows::Traversal_Evaluate()
                 + evaluate[i].act_Time+ temp + evaluate[i].act_Place + temp
                 + evaluate[i].act_Score + temp + evaluate[i].act_Evaluate;
         QLineEdit *text = new QLineEdit(str);
+        text->setReadOnly(true);
         layout->addWidget(text);
     }
     win->setLayout(layout);
@@ -1562,10 +2010,15 @@ void windows::Traversal_Evaluate()
 
 void windows::Search_Evaluate()
 {
-    window_Messagetool *win = new window_Messagetool;
+    Messagetool *win = new Messagetool;
     win->setWindowTitle(tr("Search_Evaluate"));
     win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
 
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
     QLabel *lbl = new QLabel(win);
     lbl->setText("please input search act_name:");
     QVBoxLayout *layout = new QVBoxLayout;
@@ -1593,6 +2046,7 @@ void windows::Search_Evaluate()
                         + evaluate[i].act_Time+ temp + evaluate[i].act_Place + temp
                         + evaluate[i].act_Score + temp + evaluate[i].act_Evaluate;
                 QTextEdit *showtext = new QTextEdit;
+                showtext->setReadOnly(true);
                 showtext->setPlainText(str);
                 showtext->resize(500,100);
                 showtext->show();
@@ -1605,4 +2059,373 @@ void windows::Search_Evaluate()
             }
         }
         }
+}
+//3.1
+void windows::ActiPlan_FeasAnal()//活动可行性分析（拓扑排序）
+{
+    vrcnode *topo = new vrcnode[6];
+    topo[0].data = 'A';
+    topo[0].In = 3;
+    topo[0].first = NULL;
+    topo[1].data = 'B';
+    topo[1].In = 0;
+    topo[1].first = new node;
+    topo[1].first->vex = 0;
+    topo[1].first->next = new node;
+    topo[1].first->next->vex = 3;
+    topo[1].first->next->next = NULL;
+    topo[2].data = 'C';
+    topo[2].In = 1;
+    topo[2].first = new node;
+    topo[2].first->vex = 0;
+    topo[2].first->next = new node;
+    topo[2].first->next->vex = 3;
+    topo[2].first->next->next = NULL;
+    topo[3].data = 'D';
+    topo[3].In = 3;
+    topo[3].first = new node;
+    topo[3].first->vex = 0;
+    topo[3].first->next = new node;
+    topo[3].first->next->vex = 5;
+    topo[3].first->next->next = NULL;
+    topo[4].data = 'E';
+    topo[4].In = 0;
+    topo[4].first = new node;
+    topo[4].first->vex = 2;
+    topo[4].first->next = new node;
+    topo[4].first->next->vex = 3;
+    topo[4].first->next->next = new node;
+    topo[4].first->next->next->vex = 5;
+    topo[4].first->next->next->next = NULL;
+    topo[5].data = 'F';
+    topo[5].In = 2;
+    topo[5].first = NULL;
+    Stack s;//初始化一个栈对象
+
+    //cout << "开始拓扑排序..."<<endl;
+
+    int count = 0;//判断是否完成拓扑排序
+
+    for (int i = 0;i<6;i++)
+    {
+        if (topo[i].In == 0)
+        {
+            s.Push(i);
+        }
+    }
+
+    QLineEdit *text = new QLineEdit;
+    QString temp_text;
+    while (!s.IsEmpty())//只要栈不为空，则循环进行
+    {
+        int value;
+        s.Pop(value);
+
+        QString aa;
+        aa.append(topo[value].data);
+        aa.append("->");
+        temp_text += aa;
+        count++;
+        for (node* p = topo[value].first;p;p = p->next)//将topo[e]的弧删除
+        {
+            topo[p->vex].In--;
+            if (topo[p->vex].In == 0)
+                s.Push(p->vex);
+        }
+    }
+    //
+    if (6 == count)
+        QMessageBox::information(this,"SUCCESS","Topo Success");
+    else
+        QMessageBox::information(this,"ERROR","Topo Error");
+    text->setText(temp_text);
+    text->show();
+    //内存清理
+    for (int i = 0;i<6;i++)
+    {
+        node* p = topo[i].first, *pr;
+        while (p)
+        {
+            pr = p;
+            p = p->next;
+            delete[] pr;
+        }
+    }
+    delete[] topo;
+
+}
+
+void windows::Inse_ActiPlan()//插入活动信息记录
+{
+    Messagetool *win = new Messagetool;
+    win->setWindowTitle(tr("Insert_Rncord"));
+    win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
+    QLabel *lbl = new QLabel(win);
+    lbl->setText("please input space you want to insert:");
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(lbl);
+    layout->addWidget(win->readline);
+    layout->addWidget(win->bttn);
+    win->setLayout(layout);
+
+    connect(win->bttn,&QPushButton::clicked,win,&QDialog::accept);
+
+
+    if ( win->exec() == QDialog::Accepted )
+    {
+        win->str = win->readline->toPlainText();
+        int position =win->str.toInt();
+        if(position>=R.lefght + 2 || position < 1)
+        {
+           // QMessageBox(this,"ERROR","Cross The Border");
+            delete win;
+        }
+                QMessageBox::information(this,"SUCCESS","SUCCESS");
+                QDialog *wins = new QDialog;
+                wins->setWindowTitle("show");
+                QLineEdit *read1 = new QLineEdit("code");
+                QLineEdit *read2 = new QLineEdit("ActiName");
+                QLineEdit *read3 = new QLineEdit("AnctDesc");
+                QLineEdit *read4 = new QLineEdit("FollActi");
+
+                QPushButton *bttn = new QPushButton();
+                bttn->setText("send");
+                QVBoxLayout *layout = new QVBoxLayout;
+                layout->addWidget(read1);
+                layout->addWidget(read2);
+                layout->addWidget(read3);
+                layout->addWidget(read4);
+
+                layout->addWidget(bttn);
+                wins->setLayout(layout);
+                connect(bttn,&QPushButton::clicked,wins,&QDialog::accept);
+                if ( wins->exec() == QDialog::Accepted )
+                {
+                    for (int i = R.lefght;i >= position;i--)
+                    {
+                        R.elem[i + 1] = R.elem[i];
+                    }
+                    R.elem[position].Code = read1->text();
+                    R.elem[position].ActiName = read1->text();
+                    R.elem[position].AnctDesc = read1->text();
+                    R.elem[position].FollActi = read1->text();
+                    R.lefght++;
+                }
+        }
+}
+
+void windows::Outp_ActiPlan()//输出当前活动信息记录
+{
+
+    QVBoxLayout *layout = new QVBoxLayout;
+    QWidget *win = new QWidget();
+    win->resize(600,200);
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
+    win->setWindowTitle("show present record");
+    int i;
+    QString info = "   ";
+    for(i = 0;i < R.lefght;++i)
+    {
+        QString str ;
+        str = R.elem[i].Code + info + R.elem[i].ActiName + info + R.elem[i].AnctDesc + info
+                + R.elem[i].FollActi;
+        QLineEdit *text = new QLineEdit(str);
+        text->setReadOnly(true);
+        layout->addWidget(text);
+    }
+
+    win->setLayout(layout);
+    win->show();
+}
+
+void windows::Modi_ActiPlan()//修改活动信息记录
+{
+    Messagetool *win = new Messagetool;
+    win->setWindowTitle(tr("Modify_Record"));
+    win->bttn->setText(tr("send"));
+    win->bttn->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
+    QLabel *lbl = new QLabel(win);
+    lbl->setText("please input modify activity_name:");
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(lbl);
+    layout->addWidget(win->readline);
+    layout->addWidget(win->bttn);
+    win->setLayout(layout);
+
+    connect(win->bttn,&QPushButton::clicked,win,&QDialog::accept);
+
+
+    if ( win->exec() == QDialog::Accepted )
+    {
+        win->str = win->readline->toPlainText();
+        int i;
+        for(i = 0;i < R.lefght;++i)
+        {
+            if(R.elem[i].ActiName == win->str)
+            {
+
+                QMessageBox::information(this,"SUCCESS","SUCCESS");
+                QDialog *wins = new QDialog;
+                wins->setWindowTitle("show");
+
+                QLineEdit *read1 = new QLineEdit("code");
+                QLineEdit *read2 = new QLineEdit("ActiName");
+                QLineEdit *read3 = new QLineEdit("AnctDesc");
+                QLineEdit *read4 = new QLineEdit("FollActi");
+
+                QPushButton *bttn = new QPushButton();
+                bttn->setText("send");
+                QVBoxLayout *layout = new QVBoxLayout;
+                layout->addWidget(read1);
+                layout->addWidget(read2);
+                layout->addWidget(read3);
+                layout->addWidget(read4);
+                layout->addWidget(bttn);
+                wins->setLayout(layout);
+                connect(bttn,&QPushButton::clicked,wins,&QDialog::accept);
+                if ( wins->exec() == QDialog::Accepted )
+                {
+                    R.elem[i].Code = read1->text();
+                    R.elem[i].ActiName = read2->text();
+                    R.elem[i].AnctDesc = read3->text();
+                    R.elem[i].FollActi = read4->text();
+                }
+
+                break;
+            }
+            else
+            {
+                QMessageBox::information(this,"ERROR","ERROR");
+                break;
+            }
+        }
+        }
+}
+
+void windows::Get_ActiPlan()//从文件中读取活动详细信息
+{
+    QTextCodec *codec = QTextCodec::codecForName("utf8");
+
+    QFile outfile;
+
+  //  QMessageBox::information(this,"SHOW","OPEN SHOW");
+    outfile.setFileName(":/new/res/topo.txt");
+        if (!outfile.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::information(this,"ERROR","OPEN ERROR");
+        }
+        else
+        {
+            QTextStream ou(&outfile);
+            ou.setCodec(codec);
+        for (int i = 0; i < 6; i++)
+        {
+            QString temp = ou.readLine();
+            QStringList temp_L = temp.split("#");
+            R.elem[i].Code = temp_L[0];
+            R.elem[i].ActiName = temp_L[1];
+            R.elem[i].AnctDesc = temp_L[2];
+            R.elem[i].FollActi = temp_L[3];
+        }
+        R.lefght = 6;
+        QMessageBox::information(this,"SUCCESS","OPEN SUCCESS");
+        }
+        outfile.close();
+}
+
+void windows::windows_plan()
+{
+    QWidget *windows2 = new QWidget;
+    windows2->resize( QSize( 300, 300 ));
+    windows2->setWindowTitle(tr("club helper"));
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    windows2->setPalette(palette);
+
+    QPushButton *bttn1 = new QPushButton(tr("Initial_Actiplan"));
+    bttn1->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+    QPushButton *bttn2 = new QPushButton("Insert_ActiPlan");
+    bttn2->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+    QPushButton *bttn3 = new QPushButton("Modity_ActiPlan");
+    bttn3->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+    QPushButton *bttn4 = new QPushButton(tr("Output_ActiPlan"));
+    bttn4->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+    QPushButton *bttn5 = new QPushButton("ActiPlan_FeasAnal");
+    bttn5->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+    QPushButton *bttn6 = new QPushButton("ActiPlan_FeasAnal");
+    bttn6->setStyleSheet("border:2px groove rgb(213,176,195);border-radius:10px;padding:2px 4px;");
+
+
+    connect(bttn1,&QPushButton::clicked,this,&windows::Get_ActiPlan);
+    connect(bttn2,&QPushButton::clicked,this,&windows::Inse_ActiPlan);
+    connect(bttn3,&QPushButton::clicked,this,&windows::Modi_ActiPlan);
+    connect(bttn4,&QPushButton::clicked,this,&windows::Outp_ActiPlan);
+    connect(bttn5,&QPushButton::clicked,this,&windows::ActiPlan_FeasAnal);
+    connect(bttn6,&QPushButton::clicked,this,&windows::ActiPlan_FeasAnal);
+
+
+
+    QVBoxLayout *vbox = new QVBoxLayout;
+    vbox->addWidget(bttn1);
+    vbox->addWidget(bttn2);
+    vbox->addWidget(bttn3);
+    vbox->addWidget(bttn4);
+    vbox->addWidget(bttn5);
+    vbox->addWidget(bttn6);
+
+
+    windows2->setLayout(vbox);
+    windows2->show();
+}
+
+//3.2
+
+void windows::guide_school()
+{   //QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
+    QDialog *win = new QDialog;
+    QLabel *pic = new QLabel(win);
+    QPalette palette;
+    palette.setBrush(QPalette::Background, QBrush(QPixmap(":/images/23")));
+
+    win->setPalette(palette);
+    QPixmap pix(":/images/2");
+    QLabel *text = new QLabel(win);
+
+    pic->setPixmap(pix);
+   QVBoxLayout *layout = new QVBoxLayout;
+   layout->addWidget(pic);
+   win->setLayout(layout);
+
+
+    win->show();
+}
+
+int main(int argc, char *argv[])
+{
+
+    QApplication shit(argc, argv);
+    QTranslator oTranslator;
+    windows win;
+    win.show();
+    return shit.exec();
 }

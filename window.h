@@ -21,9 +21,65 @@
 #include <QList>
 #include <QTextEdit>
 #include <QLineEdit>
+#include <QStringList>
+#include <QTextCodec>
+#include <QPalette>
+#define MAX 999;
+#define INIT_LEN_ARRAY 100//数组的初始化长度
+#define MaxInt 32767;//表示极大值；
+
+#define MVNum 100;
+#define BDNum MVNum * (MVNum - 1);			//最大边数
+#define OK 1;
+#define ERROR 0;
+
 namespace Ui {
 class windows;
 }
+
+class Stack :public QWidget
+{
+
+public:
+    Stack()
+    {
+        data = new int[INIT_LEN_ARRAY];
+        top = -1;
+    }
+    ~Stack()
+    {
+        delete[] data;
+    }
+    void Push(int value)//压栈
+    {
+        if (top == INIT_LEN_ARRAY - 1)
+        {
+            QMessageBox::information(this,"ERROR","Full Stack");
+            return;
+        }
+        top++;
+        data[top] = value;
+    }
+    void Pop(int& value)//出栈
+    {
+        if (top == -1)
+        {
+            QMessageBox::information(this,"ERROR","Empty Stack");
+            return;
+        }
+        value = data[top];//将值保留在e中
+        top--;
+    }
+    bool IsEmpty()//判断栈是否为空
+    {
+        if (top == -1)
+            return true;
+        return false;
+    }
+private:
+    int* data;
+    int top;
+};
 
 class windows :public QWidget
 {
@@ -74,11 +130,16 @@ public:
     void Search_Support();
 
     //第三部分
+    void Get_ActiPlan();//从文件中读取活动详细信息
+    void Outp_ActiPlan();//输出当前活动信息记录
+    void Inse_ActiPlan();//插入活动信息记录
+    void Modi_ActiPlan();//修改活动信息记录
+    void ActiPlan_FeasAnal();//活动可行性分析（拓扑排序）
+    void windows_plan();
 
     //
-
-
-
+    //void show_prepare();
+    void guide_school();
     //
 
     void Windwos_Evalute();
@@ -92,6 +153,57 @@ private:
     QPushButton *bttn1;
     QPushButton *bttn2;
     QPushButton *bttn3;
+
+//3.1
+    struct Acti_Plan
+    {
+        QString Code;//事件代号
+        QString ActiName;//活动名称
+        QString AnctDesc;//活动描述
+        QString FollActi;//先行活动
+    };
+    struct gSqlist
+    {
+        Acti_Plan* elem;
+        int lefght;
+    }R;
+    struct node//结点域
+    {
+        int vex;//后续活动下标
+        node *next;
+    };
+    struct vrcnode
+    {
+        char data;//活动
+        int In;//入度
+        node* first;
+    };
+    struct Things
+    {
+        QString code;//事件代号
+        QString thname;//事件名称
+        QString thdesc;//事件描述
+        QString desc;//解释
+    };
+    struct Actity
+    {
+        QString code;//代号
+        QString Actiname;//活动名称
+        QString Actidesc;//活动描述
+        int weight;//权值
+        QString fronth;//前事件
+        QString afth;//后事件
+    };
+    struct Plan_Info
+    {
+        Things* thing;//结构体数组
+        Actity* actity;
+        int thnum, actinum;//事件数目，活动数目
+    }T;
+
+
+    //3.2
+
 
 };
 
@@ -131,7 +243,7 @@ public:
     QString regulation;
 };
 
-class Organization                                                                          //组织机构结构体
+class Organization     //组织机构结构体
 {
 public:
     QString name;
@@ -166,4 +278,16 @@ public:
     QString act_Score;/**活动评分数据成员**/
     QString act_Evaluate;/**活动评价数据成员**/
 };
+/*
+class Graph
+{
+public:window_Messagetool
+    int arcs[101][101];
+    void pointpath(Graph &t,char cstart[20],char cend[20]);
+};
+*/
+
+
+
+
 #endif // MAINWINDOW_H
